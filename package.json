@@ -1,0 +1,37 @@
+{
+  "name": "http-handler",
+  "version": "0.0.0.1",
+  "description": "Minimalist handling for http requests.  Where non-file urls are handled by index.js in relative folder, and resource files are streamed from resources directory.",
+  "homepage": "https://github.com/willmark/http-handler",
+  "author": {
+    "name": "Mark Williams",
+    "email": "mark@togglebit.org",
+    "url": "http://togglebit.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/willmark/http-handler.git"
+  },
+  "scripts": {
+    "test": "node test.js"
+  },
+  "engine": {
+    "node": "0"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-preprocess": "~3.0.1",
+    "grunt-contrib-uglify": "~0.2.7",
+    "grunt-contrib-jshint": "~0.7.2",
+    "grunt-contrib-nodeunit": "~0.2.2"
+  },
+  "keywords": [
+    "http",
+    "minimal http request handling",
+    "http server",
+    "http handling"
+  ],
+  "readmeFilename": "README.md"
+}
