@@ -4,7 +4,13 @@
  * req - http request
  * res - http response
  */
-module.exports = function(resources, req, res) {
+module.exports = {
+  load: function(resources, req, res) {
+   file = require('path').join(resources, req.url);
+   require('fs').stat(file, function(err, stats) {
+       if (err || !stats.isFile()) {
+          require('404')(req, res);
+       } else {
    res.writeHead(200, {'Content-Type': 'text/plain'});
    rs = require('fs').createReadStream(require('path').join(resources, req.url));
    rs.pipe(res);
@@ -15,4 +21,7 @@ module.exports = function(resources, req, res) {
    rs.on('end', function() {
        res.end();
    });
+}
+   });
+  }
 };

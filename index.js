@@ -1,6 +1,6 @@
 path = require("path");
 
-modulepfx = "." + path.sep;
+modulepfx = path.dirname(module.filename) + path.sep;
 
 responsesdefault = modulepfx + "responses";
 
@@ -23,7 +23,12 @@ resource = function(id, req, res) {
     } catch (err) {
         //failed module load with config repository, try within this module directory
         //default behavior is to read the resources file and pipe to response stream
-        return require(resourcesdefault)(resources, req, res);
+        console.log('no resource in owner module, try default: ' + err);
+        handler = require(resourcesdefault);
+        console.log('handler fun ' + Object.keys(handler));
+        return handler.load(resources, req, res);
+        //return require(resourcesdefault)(resources, req, res);
+        //return require(path.join(resourcesdefault, id))(req, res);
     }
 };
 
@@ -72,14 +77,11 @@ module.exports = {
             response("404", req, res);
             return;
         }
-        fs.stat(file, function(err, stats) {
-            if (err || stats.isDirectory()) {
-                //Not a file resource.  Now, try to handle it as a module
-                file = path.join(responses, reqpath);
-                fs.stat(file, function(err, stats) {
-                    if (err) {
-                        response("404", req, res);
-                    } else if (stats.isDirectory()) {
+                //allow only the index.js handler for the file dir location handle the request 
+                try {
+                    resource(reqpath, req, res);
+                } catch (err) {
+ console.error('caught the resource read err: ' + err);
                         //non-file requests are handled by respective index.js in the requested path
                         try {
                             response(reqpath, req, res);
@@ -88,25 +90,7 @@ module.exports = {
                             console.error("Caught Unknown Error: " + err);
                             response("500", req, res);
                         }
-                    } else if (stats.isFile()) {
-                        console.log("Tried handling " + reqpath + " as a file in public directory.  Responding with 404.");
-                        response("404", req, res);
-                    }
-                });
-            } else if (stats.isFile()) {
-                //allow only the index.js handler for the file dir location handle the request 
-                try {
-                    resource(reqpath, req, res);
-                } catch (err) {
-                    //path to 500 handler
-                    console.error("Caught Unknown Error: " + err);
-                    response("500", req, res);
                 }
-            } else if (stats.isDirectory()) {
-                console.log("Tried handling " + reqpath + " as a module in resources directory.  Responding with 404.");
-                response("404", req, res);
-            }
-        });
         return module.exports;
     }
 };
