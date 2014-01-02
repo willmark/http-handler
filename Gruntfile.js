@@ -30,6 +30,8 @@ module.exports = function(grunt) {
     grunt.registerTask("default", [ "jshint", "tests", "preprocess", "uglify" ]);
     grunt.registerTask([ "tests" ], "Unit testing", function() {
         grunt.file.write("./resources/file1", "contents of file1");
+        grunt.file.write("./responses/index.js", "module.exports = function(req, res) { res.writeHead(200, {'Content-Type': 'text/plain'}); res.write('home requested: ' + req.url); res.end(); };");
+        grunt.file.write("./responses/throwerror/index.js", "throw new Error('Error Test');");
         grunt.task.run("nodeunit");
     });
 };

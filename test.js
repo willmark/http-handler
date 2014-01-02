@@ -13,7 +13,10 @@ hostport = url.parse(hostport);
 var port = hostport.port;
 var host = hostport.hostname;
 
-var handler = require("./index");
+handler = require("./index");
+server = http.createServer(function(req, res) {
+    handler.respond(req, res);
+});
 /*
 exports.noArgsFails = function(a) {
     a.expect(1);
@@ -35,19 +38,62 @@ exports.badCallbackFails = function(a) {
     a.done();
 };
 */
-exports.filesSameNoCopy = function(a) {
-    http.createServer(function(req, res) {
-        console.log('responding to req ' + req.url);
-        handler.respond(req, res);
-        http.close();
-        a.ok();
-        a.done();
-    }).listen(port, host) {
-        console.log('listening on ' + http.address());
-        http.get(http.address(), function(res) {
-            console.log('resp is ' + res);
+exports.homeOK = function(a) {
+    server.listen(port, host, function() {
+        a.expect(1);
+        http.get(server.address(), function(res) {
+            res.on('data', function (chunk) {
+                server.close();
+                a.ok(chunk.toString() === 'home requested: /');
+                a.done();
+            });
         }); 
     });
-    
-    a.expect(1);
+};
+
+exports.resourceOK = function(a) {
+    server.listen(port, host, function() {
+        a.expect(1);
+        address = server.address();
+        address.path = "/file1";
+        http.get(address, function(res) {
+            res.on('data', function (chunk) {
+                server.close();
+                a.ok(chunk.toString() === 'contents of file1');
+                a.done();
+            });
+        }); 
+    });
+};
+
+exports.response404 = function(a) {
+    server.listen(port, host, function() {
+        a.expect(2);
+        address = server.address();
+        address.path = "/file2";
+        http.get(address, function(res) {
+            res.on('data', function (chunk) {
+                server.close();
+                a.ok(res.statusCode === 404);
+                a.ok(chunk.toString() === '/file2 not found');
+                a.done();
+            });
+        }); 
+    });
+};
+
+exports.response500 = function(a) {
+    server.listen(port, host, function() {
+        a.expect(2);
+        address = server.address();
+        address.path = "/throwerror";
+        http.get(address, function(res) {
+            res.on('data', function (chunk) {
+                server.close();
+                a.ok(res.statusCode === 500);
+                a.ok(chunk.toString() === '/throwerror unknown error');
+                a.done();
+            });
+        }); 
+    });
 };
