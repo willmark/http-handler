@@ -84,6 +84,13 @@ response = function(filepath, req, res) {
 };
 
 /**
+ * Default hook behavior for response followup
+ */
+defaultCallback = function(statusCode, err) {
+    //Can put different logging levels in parent callback
+};
+
+/**
  * Exports the respond function to handling http responses
  * config - configuration options
  *     responses - full directory path to responses handling folder
@@ -101,7 +108,8 @@ module.exports = {
      * req - http request http.IncomingMessage
      * res - http response http.ServerResponse
      */
-    respond: function(req, res) {
+    respond: function(req, res, callback) {
+        callback = callback || defaultCallback;
         fs = require("fs");
         url = require("url");
         reqpath = url.parse(req.url).pathname;
@@ -109,11 +117,16 @@ module.exports = {
         //First, check if it is a valid resource file, and return it from the resources directory
         try {
             if (!resource(reqpath, req, res) && !response(reqpath, req, res)) {
-                require(path.join(responsesdefault, "404"))(req, res);
+                //require(path.join(responsesdefault, "404"))(req, res);
+                response("404", req, res);
+                callback(404);
+            } else {
+                callback(res.statusCode);
             }
         } catch (err) {
-            console.warn("Caught error responding to request: " + err.stack);
-            require(path.join(responsesdefault, "500"))(req, res);
+            //require(path.join(responsesdefault, "500"))(req, res);
+            response("500", req, res);
+            callback(500, err);
         }
         return module.exports;
     }

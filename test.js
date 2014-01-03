@@ -15,7 +15,26 @@ var host = hostport.hostname;
 
 handler = require("./index").init();
 server = http.createServer(function(req, res) {
-    handler.respond(req, res);
+    handler.respond(req, res, function (statusCode, err) {
+        switch (statusCode) {
+            case 200:
+                console.log('Completed request successfully: ' + req.url);
+                break;
+            case 403:
+                console.warn('Forbidden: ' + req.url);
+                break;
+            case 404:
+                console.warn('URL not found: ' + req.url);
+                break;
+            case 500:
+                console.warn('500 error: ' + err);
+                break;
+            default:
+                console.error('Unknown status: ' + statusCode);
+                console.error('Unknown error: ' + err);
+                break;
+        }
+    });
 });
 
 exports.defaultHomeOK = function(a) {
@@ -129,6 +148,26 @@ exports.parentResourceOK = function(a) {
                 server.close();
                 a.ok(res.statusCode === 200);
                 a.ok(chunk.toString().trim() === 'parent file1');
+                a.done();
+            });
+        }); 
+    });
+};
+
+exports.parent403OK = function(a) {
+    handler = require('./index').init({
+        resources: './parentresources',
+        responses: './parentresponses'
+    });
+    server.listen(port, host, function() {
+        a.expect(2);
+        address = server.address();
+        address.path = "/403";
+        http.get(address, function(res) {
+            res.on('data', function (chunk) {
+                server.close();
+                a.ok(res.statusCode === 403);
+                a.ok(chunk.toString().trim() === 'Forbidden: /403');
                 a.done();
             });
         }); 

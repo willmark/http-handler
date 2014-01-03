@@ -35,6 +35,7 @@ module.exports = function(grunt) {
         grunt.file.write("./parentresponses/index.js", "module.exports = function(req, res) { res.writeHead(200, {'Content-Type': 'text/plain'}); res.write('parent home requested: ' + req.url); res.end(); };");
         grunt.file.write("./responses/throwerror/index.js", "throw new Error('Default Error Test');");
         grunt.file.write("./parentresponses/throwerror/index.js", "throw new Error('Parent Error Test');");
+        grunt.file.write("./parentresponses/403/index.js", "module.exports = function(req, res) { res.writeHead(403, {'Content-Type': 'text/plain'}); res.write('Forbidden: ' + req.url); res.end(); };");
         grunt.task.run("nodeunit");
     });
 };

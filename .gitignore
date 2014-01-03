@@ -1,6 +1,9 @@
 npm-debug.log
-node-modules/
+node_modules/
 dist/
 resources/file1
 responses/throwerror/
 src-pp/
+parentresources/
+parentresponses/
+responses/index.js
