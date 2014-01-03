@@ -28,6 +28,7 @@ containing index.js, that directory is loaded as a module
 resource, and is expected to handle the incoming request.
 An example index.js module resource might look like this:
 
+<pre><code>
 /**
  * Default style.css handler
  */
@@ -38,6 +39,7 @@ module.exports = function (req, res) {
     res.write("body{ background-color:#d0e4fe; }");
     res.end();
 };
+</code></pre>
 
 If neither a resource exists, nor a module, there is a default 
 <http-handler root directory>/responses/404/index.js
