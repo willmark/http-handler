@@ -1,5 +1,7 @@
 path = require("path");
 
+fs = require("fs");
+
 modulepfx = path.dirname(module.filename) + path.sep;
 
 responsesdefault = modulepfx + "responses";
@@ -11,24 +13,51 @@ responses = responsesdefault;
 resources = resourcesdefault;
 
 /**
+ * Validate file exists
+ * usage:
+ *     file - String path of file to check
+ */
+function isValidFile(file) {
+    try {
+        return fs.statSync(file).isFile();
+    } catch (err) {
+        return false;
+    }
+}
+
+/**
+ * Validate directory exists
+ * usage:
+ *     dir - String path of directory to check
+ */
+function isValidDir(dir) {
+    try {
+        return fs.statSync(dir).isDirectory();
+    } catch (err) {
+        return false;
+    }
+}
+
+/**
  * Join resources root folder to requested sub-directory
  * id - sub-folder path
  * req - http request http.IncomingMessage
  * res - http response http.ServerResponse
  */
-resource = function(id, req, res) {
-    try {
-        //first, give parent module a chance to handle the resource
-        return require(path.join(resources, id))(req, res);
-    } catch (err) {
-        //failed module load with config repository, try within this module directory
-        //default behavior is to read the resources file and pipe to response stream
-        console.log('no resource in owner module, try default: ' + err);
-        handler = require(resourcesdefault);
-        console.log('handler fun ' + Object.keys(handler));
-        return handler.load(resources, req, res);
-        //return require(resourcesdefault)(resources, req, res);
-        //return require(path.join(resourcesdefault, id))(req, res);
+resource = function(filepath, req, res) {
+    parentfile = path.resolve(path.join(resources, filepath));
+    if (isValidFile(parentfile)) {
+        if (isValidFile(path.join(resources, "index.js"))) {
+            //Parent module resource handler exists.
+            require(resources)(req, res);
+            return true;
+        } else {
+            //Default resource handler
+            require(resourcesdefault)(req, res);
+            return true;
+        }
+    } else {
+        return false;
     }
 };
 
@@ -38,13 +67,20 @@ resource = function(id, req, res) {
  * req - http request http.IncomingMessage
  * res - http response http.ServerResponse
  */
-response = function(id, req, res) {
-    try {
-        return require(path.join(responses, id))(req, res);
-    } catch (err) {
-        //failed module load with config repository, try within this module directory
-        return require(responsesdefault + path.sep + id)(req, res);
+response = function(filepath, req, res) {
+    parentdir = path.resolve(path.join(responses, filepath));
+    defaultdir = path.resolve(path.join(responsesdefault, filepath));
+    result = false;
+    if (isValidDir(parentdir) && isValidFile(path.join(parentdir, "index.js"))) {
+        //Parent module response handler exists.
+        require(parentdir)(req, res);
+        result = true;
+    } else if (isValidDir(defaultdir) && isValidFile(path.join(defaultdir, "index.js"))) {
+        //Default response handler
+        require(defaultdir)(req, res);
+        result = true;
     }
+    return result;
 };
 
 /**
@@ -55,6 +91,7 @@ response = function(id, req, res) {
  */
 module.exports = {
     init: function(config) {
+        config = config || {};
         responses = config.responses || responsesdefault;
         resources = config.resources || resourcesdefault;
         return module.exports;
@@ -70,27 +107,14 @@ module.exports = {
         reqpath = url.parse(req.url).pathname;
         //strip out the query to search path/file
         //First, check if it is a valid resource file, and return it from the resources directory
-        file = path.join(resources, reqpath);
-        //index.js is reserved to handlers, give a 404
-        if (path.basename(file).match(/index.js/)) {
-            console.log("Tried handling " + reqpath + " as a file (index.js reserved for module loading.  Responding with 404.");
-            response("404", req, res);
-            return;
+        try {
+            if (!resource(reqpath, req, res) && !response(reqpath, req, res)) {
+                require(path.join(responsesdefault, "404"))(req, res);
+            }
+        } catch (err) {
+            console.warn("Caught error responding to request: " + err.stack);
+            require(path.join(responsesdefault, "500"))(req, res);
         }
-                //allow only the index.js handler for the file dir location handle the request 
-                try {
-                    resource(reqpath, req, res);
-                } catch (err) {
- console.error('caught the resource read err: ' + err);
-                        //non-file requests are handled by respective index.js in the requested path
-                        try {
-                            response(reqpath, req, res);
-                        } catch (err) {
-                            //path to 500 handler
-                            console.error("Caught Unknown Error: " + err);
-                            response("500", req, res);
-                        }
-                }
         return module.exports;
     }
 };

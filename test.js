@@ -13,45 +13,25 @@ hostport = url.parse(hostport);
 var port = hostport.port;
 var host = hostport.hostname;
 
-handler = require("./index");
+handler = require("./index").init();
 server = http.createServer(function(req, res) {
     handler.respond(req, res);
 });
-/*
-exports.noArgsFails = function(a) {
-    a.expect(1);
-    a.throws(function() {
-        handler.respond();
-    }, "OK");
-    a.done();
-};
 
-exports.badCallbackFails = function(a) {
-    http.createServer(function(req, res) {
-        handler.respond(req, res);
-        http.close();
-    }).listen(port, host);
-    a.expect(1);
-    a.throws(function() {
-        handler.respond();
-    }, /Callback required/);
-    a.done();
-};
-*/
-exports.homeOK = function(a) {
+exports.defaultHomeOK = function(a) {
     server.listen(port, host, function() {
         a.expect(1);
         http.get(server.address(), function(res) {
             res.on('data', function (chunk) {
                 server.close();
-                a.ok(chunk.toString() === 'home requested: /');
+                a.ok(chunk.toString() === 'default home requested: /');
                 a.done();
             });
         }); 
     });
 };
 
-exports.resourceOK = function(a) {
+exports.defaultResourceOK = function(a) {
     server.listen(port, host, function() {
         a.expect(1);
         address = server.address();
@@ -59,14 +39,14 @@ exports.resourceOK = function(a) {
         http.get(address, function(res) {
             res.on('data', function (chunk) {
                 server.close();
-                a.ok(chunk.toString() === 'contents of file1');
+                a.ok(chunk.toString() === 'default file1');
                 a.done();
             });
         }); 
     });
 };
 
-exports.response404 = function(a) {
+exports.defaultResponse404 = function(a) {
     server.listen(port, host, function() {
         a.expect(2);
         address = server.address();
@@ -82,7 +62,7 @@ exports.response404 = function(a) {
     });
 };
 
-exports.response500 = function(a) {
+exports.defaultResponse500 = function(a) {
     server.listen(port, host, function() {
         a.expect(2);
         address = server.address();
@@ -92,6 +72,63 @@ exports.response500 = function(a) {
                 server.close();
                 a.ok(res.statusCode === 500);
                 a.ok(chunk.toString() === '/throwerror unknown error');
+                a.done();
+            });
+        }); 
+    });
+};
+
+exports.parentDefaultResponse500 = function(a) {
+    handler = require('./index').init({
+        resources: './parentresources',
+        responses: './parentresponses'
+    });
+    server.listen(port, host, function() {
+        a.expect(2);
+        address = server.address();
+        address.path = "/throwerror";
+        http.get(address, function(res) {
+            res.on('data', function (chunk) {
+                server.close();
+                a.ok(res.statusCode === 500);
+                a.ok(chunk.toString() === '/throwerror unknown error');
+                a.done();
+            });
+        }); 
+    });
+};
+
+exports.parentHomeOK = function(a) {
+    handler = require('./index').init({
+        resources: './parentresources',
+        responses: './parentresponses'
+    });
+    server.listen(port, host, function() {
+        a.expect(1);
+        http.get(server.address(), function(res) {
+            res.on('data', function (chunk) {
+                server.close();
+                a.ok(chunk.toString() === 'parent home requested: /');
+                a.done();
+            });
+        }); 
+    });
+};
+
+exports.parentResourceOK = function(a) {
+    handler = require('./index').init({
+        resources: './parentresources',
+        responses: './parentresponses'
+    });
+    server.listen(port, host, function() {
+        a.expect(2);
+        address = server.address();
+        address.path = "/file1";
+        http.get(address, function(res) {
+            res.on('data', function (chunk) {
+                server.close();
+                a.ok(res.statusCode === 200);
+                a.ok(chunk.toString().trim() === 'parent file1');
                 a.done();
             });
         }); 
