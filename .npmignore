@@ -1,0 +1,13 @@
+npm-debug.log
+node_modules/
+dist/
+resources/file1
+responses/throwerror/
+src-pp/
+parentresources/
+parentresponses/
+responses/index.js
+.git
+.gitignore
+test.js
+Gruntfile.js
