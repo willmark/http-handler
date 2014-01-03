@@ -92,11 +92,25 @@ defaultCallback = function(statusCode, err) {
 
 /**
  * Exports the respond function to handling http responses
+ *
+ * A http server listening for requests (see nodejs server.listen),
+ * can forward the req and res objects to this handler's respond(req, res, cb)
+ * function to look for either file resources or handlers for a requested url.
+ * Handlers are index.js node modules within the directory structure indicated
+ * on the req.url relative path.
+ *
  * config - configuration options
  *     responses - full directory path to responses handling folder
  *     resources - full directory path to resources (ie. images, video, etc.)
  */
 module.exports = {
+    /**
+     * Initialize the module with two base directory paths identified in config object.
+     * config {
+     *   responses: <Base directory location for node module handlers>
+     *   resources: <Base directory location for static file resources (ie. images, video, css)>
+     * }
+     */
     init: function(config) {
         config = config || {};
         responses = config.responses || responsesdefault;
@@ -107,6 +121,9 @@ module.exports = {
      * Respond to http request 
      * req - http request http.IncomingMessage
      * res - http response http.ServerResponse
+     * callback - Callback function(statusCode, err)
+     *    statusCode - http status response sent to client
+     *    err - Any internal Error encountered such as an exeption thrown in response module
      */
     respond: function(req, res, callback) {
         callback = callback || defaultCallback;
