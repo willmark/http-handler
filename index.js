@@ -39,35 +39,13 @@ function isValidDir(dir) {
 }
 
 /**
- * Join resources root folder to requested sub-directory
- * id - sub-folder path
- * req - http request http.IncomingMessage
- * res - http response http.ServerResponse
- */
-resource = function(filepath, req, res) {
-    parentfile = path.resolve(path.join(resources, filepath));
-    if (isValidFile(parentfile)) {
-        if (isValidFile(path.join(resources, "index.js"))) {
-            //Parent module resource handler exists.
-            require(resources)(req, res);
-            return true;
-        } else {
-            //Default resource handler
-            require(resourcesdefault)(req, res);
-            return true;
-        }
-    } else {
-        return false;
-    }
-};
-
-/**
  * Join responses root folder to requested sub-directory
  * id - sub-folder path
  * req - http request http.IncomingMessage
  * res - http response http.ServerResponse
  */
 response = function(filepath, req, res) {
+    do {
     parentdir = path.resolve(path.join(responses, filepath));
     defaultdir = path.resolve(path.join(responsesdefault, filepath));
     result = false;
@@ -80,8 +58,11 @@ response = function(filepath, req, res) {
         require(defaultdir)(req, res);
         result = true;
     }
+    filepath = path.dirname(filepath);
+    } while (result === false && parentdir !== filepath); 
     return result;
 };
+
 
 /**
  * Default hook behavior for response followup
@@ -133,15 +114,13 @@ module.exports = {
         //strip out the query to search path/file
         //First, check if it is a valid resource file, and return it from the resources directory
         try {
-            if (!resource(reqpath, req, res) && !response(reqpath, req, res)) {
-                //require(path.join(responsesdefault, "404"))(req, res);
+            if (!response(reqpath, req, res)) {
                 response("404", req, res);
                 callback(404);
             } else {
                 callback(res.statusCode);
             }
         } catch (err) {
-            //require(path.join(responsesdefault, "500"))(req, res);
             response("500", req, res);
             callback(500, err);
         }

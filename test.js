@@ -41,9 +41,12 @@ exports.defaultHomeOK = function(a) {
     server.listen(port, host, function() {
         a.expect(1);
         http.get(server.address(), function(res) {
+            res.on('error', function(err) {
+               console.log(err.stack());
+            });
             res.on('data', function (chunk) {
                 server.close();
-                a.ok(chunk.toString() === 'default home requested: /');
+                a.ok(chunk.toString() === '/ not found');
                 a.done();
             });
         }); 
@@ -146,8 +149,9 @@ exports.parentResourceOK = function(a) {
         http.get(address, function(res) {
             res.on('data', function (chunk) {
                 server.close();
+ console.log('>>>'+chunk.toString()+'<<<');
                 a.ok(res.statusCode === 200);
-                a.ok(chunk.toString().trim() === 'parent file1');
+                a.ok(chunk.toString().trim() === 'parent home requested: /file1');
                 a.done();
             });
         }); 
