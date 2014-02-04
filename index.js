@@ -46,30 +46,28 @@ function isValidDir(dir) {
  */
 response = function(filepath, req, res) {
     do {
-    parentdir = path.resolve(path.join(responses, filepath));
-    defaultdir = path.resolve(path.join(responsesdefault, filepath));
-    result = false;
-    if (isValidDir(parentdir) && isValidFile(path.join(parentdir, "index.js"))) {
-        //Parent module response handler exists.
-        require(parentdir)(req, res);
-        result = true;
-    } else if (isValidDir(defaultdir) && isValidFile(path.join(defaultdir, "index.js"))) {
-        //Default response handler
-        require(defaultdir)(req, res);
-        result = true;
-    }
-    filepath = path.dirname(filepath);
-    } while (result === false && parentdir !== filepath); 
+        parentdir = path.resolve(path.join(responses, filepath));
+        defaultdir = path.resolve(path.join(responsesdefault, filepath));
+        result = false;
+        if (isValidDir(parentdir) && isValidFile(path.join(parentdir, "index.js"))) {
+            //Parent module response handler exists.
+            require(parentdir)(req, res);
+            result = true;
+        } else if (isValidDir(defaultdir) && isValidFile(path.join(defaultdir, "index.js"))) {
+            //Default response handler
+            require(defaultdir)(req, res);
+            result = true;
+        }
+        if (filepath === path.sep) break;
+        filepath = path.dirname(filepath);
+    } while (result === false && parentdir !== filepath);
     return result;
 };
-
 
 /**
  * Default hook behavior for response followup
  */
-defaultCallback = function(statusCode, err) {
-    //Can put different logging levels in parent callback
-};
+defaultCallback = function(statusCode, err) {};
 
 /**
  * Exports the respond function to handling http responses
