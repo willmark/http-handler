@@ -1,6 +1,6 @@
 {
   "name": "http-handler",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Minimalist handling for http requests.  Where non-file urls are handled by index.js in relative folder, and resource files are streamed from resources directory.",
   "homepage": "https://github.com/willmark/http-handler",
   "author": {
