@@ -37,9 +37,10 @@ var response = function(filepath, req, res) {
     var path = require("path"),
         config = module.exports.config,
         result = false,
-        parentdir = path.resolve(path.join(config.responses, filepath));
+        parentdir;
     do {
         var defaultdir = path.resolve(path.join(config.responsesdefault, filepath));
+        parentdir = path.resolve(path.join(config.responses, filepath));
         if (isValidDir(parentdir) && isValidFile(path.join(parentdir, "index.js"))) {
             //Parent module response handler exists.
             require(parentdir)(req, res);
