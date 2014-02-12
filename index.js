@@ -34,11 +34,12 @@ function isValidDir(dir) {
  * res - http response http.ServerResponse
  */
 var response = function(filepath, req, res) {
-    var path = require("path");
-    var result = false;
-    var parentdir = path.resolve(path.join(module.exports.config.responses, filepath));
+    var path = require("path"),
+        config = module.exports.config,
+        result = false,
+        parentdir = path.resolve(path.join(config.responses, filepath));
     do {
-        var defaultdir = path.resolve(path.join(module.exports.config.responsesdefault, filepath));
+        var defaultdir = path.resolve(path.join(config.responsesdefault, filepath));
         if (isValidDir(parentdir) && isValidFile(path.join(parentdir, "index.js"))) {
             //Parent module response handler exists.
             require(parentdir)(req, res);
@@ -82,7 +83,7 @@ module.exports = {
      */
     init: function(config) {
         var path = require("path"),
-            modulepfx = path.dirname(module.filename) + path.sep,
+            modulepfx = path.dirname(module.filename),
             responsesdefault = path.join(modulepfx, "responses"),
             resourcesdefault = path.join(modulepfx, "resources");
         
@@ -91,9 +92,8 @@ module.exports = {
         config.responses = config.responses || responsesdefault;
         config.responsesdefault = responsesdefault;
         config.resourcesdefault = resourcesdefault;
-        module.exports.config = config;
-        
-        return module.exports;
+        this.config = config;
+        return this;
     },
     /**
      * Respond to http request 
@@ -105,9 +105,9 @@ module.exports = {
      */
     respond: function(req, res, callback) {
         callback = callback || defaultCallback;
-        fs = require("fs");
-        url = require("url");
-        reqpath = url.parse(req.url).pathname;
+        var fs = require("fs"),
+            url = require("url"),
+            reqpath = url.parse(req.url).pathname;
         //strip out the query to search path/file
         //First, check if it is a valid resource file, and return it from the resources directory
         try {
@@ -121,6 +121,6 @@ module.exports = {
             response("500", req, res);
             callback(500, err);
         }
-        return module.exports;
+        return this;
     }
 };

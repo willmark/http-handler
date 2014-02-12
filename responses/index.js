@@ -23,8 +23,9 @@ module.exports = function(req, res) {
     var fs = require("fs"),
         path = require("path"),
         url = require("url"),
+        config =  module.parent.exports.config,
         reqpath = url.parse(req.url).pathname,
-        file = path.join(module.parent.exports.config.resources, reqpath);
+        file = path.join(config.resources, reqpath);
     if (isValidFile(file)) {
       res.writeHead(200, {
           "Content-Type": "text/plain"
