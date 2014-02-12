@@ -1,16 +1,3 @@
-path = require("path");
-
-fs = require("fs");
-
-modulepfx = path.dirname(module.filename) + path.sep;
-
-responsesdefault = modulepfx + "responses";
-
-resourcesdefault = modulepfx + "resources";
-
-responses = responsesdefault;
-
-resources = resourcesdefault;
 
 /**
  * Validate file exists
@@ -18,6 +5,7 @@ resources = resourcesdefault;
  *     file - String path of file to check
  */
 function isValidFile(file) {
+    var fs = require("fs");
     try {
         return fs.statSync(file).isFile();
     } catch (err) {
@@ -31,6 +19,7 @@ function isValidFile(file) {
  *     dir - String path of directory to check
  */
 function isValidDir(dir) {
+    var fs = require("fs");
     try {
         return fs.statSync(dir).isDirectory();
     } catch (err) {
@@ -44,11 +33,12 @@ function isValidDir(dir) {
  * req - http request http.IncomingMessage
  * res - http response http.ServerResponse
  */
-response = function(filepath, req, res) {
+var response = function(filepath, req, res) {
+    var path = require("path");
+    var result = false;
+    var parentdir = path.resolve(path.join(module.exports.config.responses, filepath));
     do {
-        parentdir = path.resolve(path.join(responses, filepath));
-        defaultdir = path.resolve(path.join(responsesdefault, filepath));
-        result = false;
+        var defaultdir = path.resolve(path.join(module.exports.config.responsesdefault, filepath));
         if (isValidDir(parentdir) && isValidFile(path.join(parentdir, "index.js"))) {
             //Parent module response handler exists.
             require(parentdir)(req, res);
@@ -67,7 +57,7 @@ response = function(filepath, req, res) {
 /**
  * Default hook behavior for response followup
  */
-defaultCallback = function(statusCode, err) {};
+var defaultCallback = function(statusCode, err) {};
 
 /**
  * Exports the respond function to handling http responses
@@ -91,9 +81,18 @@ module.exports = {
      * }
      */
     init: function(config) {
+        var path = require("path"),
+            modulepfx = path.dirname(module.filename) + path.sep,
+            responsesdefault = path.join(modulepfx, "responses"),
+            resourcesdefault = path.join(modulepfx, "resources");
+        
         config = config || {};
-        responses = config.responses || responsesdefault;
-        resources = config.resources || resourcesdefault;
+        config.resources = config.resources || resourcesdefault;
+        config.responses = config.responses || responsesdefault;
+        config.responsesdefault = responsesdefault;
+        config.resourcesdefault = resourcesdefault;
+        module.exports.config = config;
+        
         return module.exports;
     },
     /**

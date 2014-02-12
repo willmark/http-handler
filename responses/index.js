@@ -1,4 +1,3 @@
-fs = require('fs');
 
 /**
  * Validate file exists
@@ -6,6 +5,7 @@ fs = require('fs');
  *     file - String path of file to check
  */
 function isValidFile(file) {
+    var fs = require("fs");
     try {
         return fs.statSync(file).isFile();
     } catch (err) {
@@ -20,10 +20,11 @@ function isValidFile(file) {
  * res - http response
  */
 module.exports = function(req, res) {
-    fs = require("fs");
-    url = require("url");
-    reqpath = url.parse(req.url).pathname;
-    file = path.join(resources, reqpath);
+    var fs = require("fs"),
+        path = require("path"),
+        url = require("url"),
+        reqpath = url.parse(req.url).pathname,
+        file = path.join(module.parent.exports.config.resources, reqpath);
     if (isValidFile(file)) {
       res.writeHead(200, {
           "Content-Type": "text/plain"

@@ -5,16 +5,16 @@ var http = require("http");
 var path = require("path");
 
 var hostname = "localhost";
-var hostport = "http://localhost:0";
 
+var hostport = "http://localhost:0";
 hostport = url.parse(hostport);
 
 //supports only http
 var port = hostport.port;
 var host = hostport.hostname;
 
-handler = require("./index").init();
-server = http.createServer(function(req, res) {
+var handler = require("./index").init();
+var server = http.createServer(function(req, res) {
     handler.respond(req, res, function (statusCode, err) {
         switch (statusCode) {
             case 200:
@@ -149,9 +149,9 @@ exports.parentResourceOK = function(a) {
         http.get(address, function(res) {
             res.on('data', function (chunk) {
                 server.close();
- console.log('>>>'+chunk.toString()+'<<<');
                 a.ok(res.statusCode === 200);
-                a.ok(chunk.toString().trim() === 'parent home requested: /file1');
+                //a.ok(chunk.toString().trim() === 'parent home requested: /file1');
+                a.ok(chunk.toString().trim() === 'parent file1');
                 a.done();
             });
         }); 
